@@ -1,8 +1,7 @@
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:speech_helper/app_screen.dart';
+import 'package:speech_helper/word_catalogue_view.dart';
 
 void main() {
 	runApp(const MyApp());
@@ -59,99 +58,76 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-	int _counter = 0;
-	FlutterTts flutterTts = FlutterTts();
+	GlobalKey<WordCatalogueState> wordCatalogueKey = GlobalKey(debugLabel: "wordCatalogueKey");
+	WordCatalogueModel? wordCatalogueModel;
 
-	@override
-	void initState() {
-		initTTS();
-		super.initState();
-	}
-
-	Future<void> initTTS() async {
-		if(Platform.isIOS) {
-			await flutterTts.setSharedInstance(true);
-			await flutterTts.setIosAudioCategory(
-				IosTextToSpeechAudioCategory.ambient,
-				[
-					IosTextToSpeechAudioCategoryOptions.allowBluetooth,
-					IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
-					IosTextToSpeechAudioCategoryOptions.mixWithOthers
-				],
-				IosTextToSpeechAudioMode.voicePrompt
-			);
-		}
-		List<dynamic> languages = await flutterTts.getLanguages;
-		if(kDebugMode) {
-			print(languages);
-		}
-		await flutterTts.setLanguage("da-DK");
-		await flutterTts.setSpeechRate(0.5);
-		await flutterTts.setVolume(1.0);
-		await flutterTts.setPitch(1.0);
-	}
-
-	Future<void> _incrementCounter() async {
-		setState(() {
-			// This call to setState tells the Flutter framework that something has
-			// changed in this State, which causes it to rerun the build method below
-			// so that the display can reflect the updated values. If we changed
-			// _counter without calling setState(), then the build method would not be
-			// called again, and so nothing would appear to happen.
-			_counter++;
-		});
-		await flutterTts.speak("Du har trykket på knappen $_counter gange");
+	Future<void> _buttonClicked(BuildContext context) {
+		GlobalKey<EditableTextState> wordKey = GlobalKey(debugLabel: "wordCatalogueKey");
+		final myController = TextEditingController();
+		return showDialog<void>(
+			context: context,
+			builder: (BuildContext context) {
+				return AlertDialog(
+					title: const Text('Add a Word'),
+					content: TextField(key: wordKey, controller: myController, autofocus: true),
+					actions: <Widget>[
+						TextButton(
+							style: TextButton.styleFrom(
+								textStyle: Theme.of(context).textTheme.labelLarge,
+							),
+							child: const Text('Cancel', textAlign: TextAlign.end),
+							onPressed: () {
+								Navigator.of(context).pop();
+							},
+						),
+						TextButton(
+							style: TextButton.styleFrom(
+								textStyle: Theme.of(context).textTheme.labelLarge,
+							),
+							child: const Text('Add', textAlign: TextAlign.end),
+							onPressed: () {
+								Navigator.of(context).pop();
+								wordCatalogueKey.currentState!.addNewWord(myController.text);
+							},
+						),
+					],
+				);
+			},
+		);
 	}
 
 	@override
 	Widget build(BuildContext context) {
-		// This method is rerun every time setState is called, for instance as done
-		// by the _incrementCounter method above.
-		//
-		// The Flutter framework has been optimized to make rerunning build methods
-		// fast, so that you can just rebuild anything that needs updating rather
-		// than having to individually change instances of widgets.
-		return Scaffold(
-			appBar: AppBar(
-				// TRY THIS: Try changing the color here to a specific color (to
-				// Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-				// change color while the other colors stay the same.
-				backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-				// Here we take the value from the MyHomePage object that was created by
-				// the App.build method, and use it to set our appbar title.
-				title: Text(widget.title),
-			),
-			body: Center(
-				// Center is a layout widget. It takes a single child and positions it
-				// in the middle of the parent.
-				child: Column(
-					// Column is also a layout widget. It takes a list of children and
-					// arranges them vertically. By default, it sizes itself to fit its
-					// children horizontally, and tries to be as tall as its parent.
-					//
-					// Column has various properties to control how it sizes itself and
-					// how it positions its children. Here we use mainAxisAlignment to
-					// center the children vertically; the main axis here is the vertical
-					// axis because Columns are vertical (the cross axis would be
-					// horizontal).
-					//
-					// TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-					// action in the IDE, or press "p" in the console), to see the
-					// wireframe for each widget.
-					mainAxisAlignment: MainAxisAlignment.center,
-					children: <Widget>[
-						Text(
-							'Du har trykket på knappen $_counter gange',
-							style: Theme.of(context).textTheme.headlineMedium,
-						),
-					],
-				),
-			),
+		wordCatalogueModel ??= WordCatalogueModel(
+			wordLst: [	WordModel(word: "Ja"),
+						WordModel(word: "Nej"),
+						WordModel(word: "Hej"),
+						WordModel(word: "Farvel"),
+						WordModel(word: "Toilet"),
+						WordModel(word: "TV"),
+						WordModel(word: "Hvad"),
+						WordModel(word: "Jeg"),
+						WordModel(word: "Du"),
+						WordModel(word: "Gå"),
+						WordModel(word: "Stue"),
+						WordModel(word: "Drikke"),
+						WordModel(word: "Spise"),
+						WordModel(word: "Hjælp")],
+			callback: () => setState(() {})
+		);
+		return AppScreen(title: const Text("Catalogue"),
 			floatingActionButton: FloatingActionButton(
-				onPressed: _incrementCounter,
-				tooltip: 'Increment',
+				onPressed: () => _buttonClicked(context),
+				tooltip: "Add Word",
 				child: const Icon(Icons.add),
-			), // This trailing comma makes auto-formatting nicer for build methods.
+			),
+			body: Padding(padding: const EdgeInsets.all(8.0),
+				child: WordCatalogue(
+					key: wordCatalogueKey,
+					model: wordCatalogueModel!,
+					onChoice: null,
+				)
+			),
 		);
 	}
 }
