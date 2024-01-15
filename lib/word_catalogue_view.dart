@@ -186,8 +186,9 @@ class WordCatalogueModel {
 				Map<String, dynamic> json = jsonDecode(f.readAsStringSync());
 				List<dynamic> jsonWords = json["words"];
 				for(var element in jsonWords) {
-					if(!wordLst.contains(element["word"])) {
-						wordLst.add(WordModel.fromJson(element));
+					WordModel word = WordModel.fromJson(element);
+					if(!wordLst.contains(word)) {
+						wordLst.add(word);
 					}
 				}
 				callback.call();
@@ -234,6 +235,23 @@ class WordModel {
 		'"pronunciation"':      pronunciation != null ? '"$pronunciation"' : null,
 		'"icon"':				icon != null ? _iconDataToJSONString(icon!) : null
 	};
+
+	@override
+	bool operator ==(Object other) {
+		if(identical(this, other)) {
+			return true;
+		}
+		if(other.runtimeType != runtimeType) {
+			return false;
+		}
+		return other is WordModel
+			&& other.word == word
+			&& other.pronunciation == pronunciation
+			&& other.icon == icon;
+	}
+
+	@override
+	int get hashCode => Object.hash(word, pronunciation, icon);
 
 	String _iconDataToJSONString(IconData data) {
 		Map<String, dynamic> map = <String, dynamic>{};
