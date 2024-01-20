@@ -118,7 +118,7 @@ class WordCatalogueState extends State<WordCatalogue> {
 		if(Platform.isAndroid) {
 			await flutterTts.setSpeechRate(0.5);
 		} else if(Platform.isIOS) {
-			await flutterTts.setSpeechRate(1.0);
+			await flutterTts.setSpeechRate(0.5);
 		}
 
 		List<dynamic> languages = await flutterTts.getLanguages;
