@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
 import 'package:speech_helper/app_screen.dart';
 import 'package:speech_helper/util.dart';
 
@@ -42,70 +43,73 @@ class WordCatalogueState extends State<WordCatalogue> {
 	Widget _catalogue() {
 		Util.logD("_catalogue");
 		return LayoutBuilder(builder: (context, constraints) {
-			return GridView.builder(
-				itemCount: widget.model.wordLst.length + widget.model.subCatalogues.length + (widget.model.isSubCatalogue ? 1 : 0),
-				gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: constraints.maxWidth > 700 ? 4 : 2),
-				itemBuilder: (_, int index) {
-					// Adding the back button if this is a subcatalogue
-					if(index == 0 && widget.model.isSubCatalogue) {
+			return ScrollShadow(
+				color: Colors.grey,
+				child: GridView.builder(
+					itemCount: widget.model.wordLst.length + widget.model.subCatalogues.length + (widget.model.isSubCatalogue ? 1 : 0),
+					gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: constraints.maxWidth > 700 ? 4 : 2),
+					itemBuilder: (_, int index) {
+						// Adding the back button if this is a subcatalogue
+						if(index == 0 && widget.model.isSubCatalogue) {
+							return tileWidgit(
+								//color: Colors.grey.withOpacity(0.50),
+								children: [
+									FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.circle, color: Colors.grey.withOpacity(0.50))),
+									const FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.arrow_back)),
+									Material(color: Colors.transparent,
+										child: InkWell(
+											onTap: () => Navigator.pop(context),
+											onLongPress: () => Navigator.pop(context),
+										),
+									),
+								]
+							);
+						}
+						// Adding any subcatalogues
+						if(getIndex(index) < 0) {
+							return tileWidgit(
+								children: [
+									FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.folder, color: Colors.grey.withOpacity(0.50))),
+									FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name)),
+									Material(color: Colors.transparent,
+										child: InkWell(
+											onTap: () => {
+												Navigator.push(
+													context,
+													MaterialPageRoute(builder: (context) => 
+														AppScreen(
+															body: Padding(padding: const EdgeInsets.all(8.0),
+																child: WordCatalogue(
+																	model: widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)],
+																	onChoice: null,
+																)
+															),
+															title: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name),
+														)
+													),
+												).then((value) => setState(() {},))
+											},
+											onLongPress: () => Navigator.pop(context),
+										),
+									),
+								]
+							);
+						}
+						// Adding all the words
 						return tileWidgit(
-							//color: Colors.grey.withOpacity(0.50),
 							children: [
-								FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.circle, color: Colors.grey.withOpacity(0.50))),
-								const FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.arrow_back)),
+								wordWidgit(widget.model.wordLst[getIndex(index)]),
 								Material(color: Colors.transparent,
 									child: InkWell(
-										onTap: () => Navigator.pop(context),
-										onLongPress: () => Navigator.pop(context),
+										onTap: () => _toggle(widget.model.wordLst[getIndex(index)]),
+										onLongPress: () => _toggle(widget.model.wordLst[getIndex(index)]),
+										//onLongPress: () => _wordSelected(context, index),
 									),
 								),
 							]
 						);
 					}
-					// Adding any subcatalogues
-					if(getIndex(index) < 0) {
-						return tileWidgit(
-							children: [
-								FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.folder, color: Colors.grey.withOpacity(0.50))),
-								FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name)),
-								Material(color: Colors.transparent,
-									child: InkWell(
-										onTap: () => {
-											Navigator.push(
-												context,
-												MaterialPageRoute(builder: (context) => 
-													AppScreen(
-														body: Padding(padding: const EdgeInsets.all(8.0),
-															child: WordCatalogue(
-																model: widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)],
-																onChoice: null,
-															)
-														),
-														title: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name),
-													)
-												),
-											).then((value) => setState(() {},))
-										},
-										onLongPress: () => Navigator.pop(context),
-									),
-								),
-							]
-						);
-					}
-					// Adding all the words
-					return tileWidgit(
-						children: [
-							wordWidgit(widget.model.wordLst[getIndex(index)]),
-							Material(color: Colors.transparent,
-								child: InkWell(
-									onTap: () => _toggle(widget.model.wordLst[getIndex(index)]),
-									onLongPress: () => _toggle(widget.model.wordLst[getIndex(index)]),
-									//onLongPress: () => _wordSelected(context, index),
-								),
-							),
-						]
-					);
-				}
+				)
 			);
 		});
 	}
