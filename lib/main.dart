@@ -62,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
 	WordCatalogueModel? wordCatalogueModel;
 
 	Future<void> _buttonClicked(BuildContext context) {
-		GlobalKey<EditableTextState> wordKey = GlobalKey(debugLabel: "wordCatalogueKey");
+		GlobalKey<EditableTextState> wordKey = GlobalKey(debugLabel: "wordKey");
 		final myController = TextEditingController();
 		return showDialog<void>(
 			context: context,
@@ -99,20 +99,88 @@ class _MyHomePageState extends State<MyHomePage> {
 	@override
 	Widget build(BuildContext context) {
 		wordCatalogueModel ??= WordCatalogueModel(
-			wordLst: [	WordModel(word: "Ja"),
-						WordModel(word: "Nej"),
-						WordModel(word: "Hej"),
-						WordModel(word: "Farvel"),
-						WordModel(word: "Toilet"),
-						WordModel(word: "TV"),
-						WordModel(word: "Hvad"),
-						WordModel(word: "Jeg"),
-						WordModel(word: "Du"),
-						WordModel(word: "Gå"),
-						WordModel(word: "Stue"),
-						WordModel(word: "Drikke"),
-						WordModel(word: "Spise"),
-						WordModel(word: "Hjælp")],
+			name: "Catalogue",
+			wordLst: [],
+			subCatalogues: [
+				WordCatalogueModel(
+					name: "Hilsner",
+					wordLst: [	WordModel(word: "Hej"),
+								WordModel(word: "Farvel"),
+								WordModel(word: "Godag"),
+								WordModel(word: "Vi Ses"),
+								WordModel(word: "Hej Halv Øje"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Behov",
+					wordLst: [	WordModel(word: "Hjælp"),
+								WordModel(word: "Sulten"),
+								WordModel(word: "Tørstig"),
+								WordModel(word: "På Toilettet"),
+								WordModel(word: "Tisse"),
+								WordModel(word: "Lort"),
+								WordModel(word: "Træt"),
+								WordModel(word: "TV"),
+								WordModel(word: "Fred"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Svar",
+					wordLst: [	WordModel(word: "Ja"),
+								WordModel(word: "Nej"),
+								WordModel(word: "Måske"),
+								WordModel(word: "Ved Ikke"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Spørge",
+					wordLst: [	WordModel(word: "Hvad"),
+								WordModel(word: "Hvem"),
+								WordModel(word: "Hvor"),
+								WordModel(word: "Hvordan"),
+								WordModel(word: "Hvorfor"),
+								WordModel(word: "Hvornår"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Personer",
+					wordLst: [	WordModel(word: "Jeg"),
+								WordModel(word: "Du"),
+								WordModel(word: "Vi"),
+								WordModel(word: "Jer"),
+								WordModel(word: "I"),
+								WordModel(word: "Mig"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Steder",
+					wordLst: [	WordModel(word: "Toilet"),
+								WordModel(word: "Stue"),
+								WordModel(word: "Lejlighed"),
+								WordModel(word: "Skov"),
+								WordModel(word: "Sø"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+
+			],
 			callback: () => setState(() {})
 		);
 		return AppScreen(title: const Text("Catalogue"),

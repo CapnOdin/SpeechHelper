@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:speech_helper/app_screen.dart';
 import 'package:speech_helper/util.dart';
 
 import 'package:flutter/material.dart';
@@ -42,31 +43,90 @@ class WordCatalogueState extends State<WordCatalogue> {
 		Util.logD("_catalogue");
 		return LayoutBuilder(builder: (context, constraints) {
 			return GridView.builder(
-				itemCount: widget.model.wordLst.length,
+				itemCount: widget.model.wordLst.length + widget.model.subCatalogues.length + (widget.model.isSubCatalogue ? 1 : 0),
 				gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: constraints.maxWidth > 700 ? 4 : 2),
 				itemBuilder: (_, int index) {
-					return GridTile(
-						child: Center(
-							child: Container(
-								margin: const EdgeInsets.only(left:5, top:5, right:5, bottom:5),
-								child: Stack(
-									fit: StackFit.expand,
-									children: [
-										wordWidgit(widget.model.wordLst[index]),
-										Material(color: Colors.transparent,
-											child: InkWell(
-												onTap: () => _toggle(widget.model.wordLst[index]),
-												onLongPress: () => _wordSelected(context, index),
-											),
-										),
-									],
-								)
-							)
-						)
+					// Adding the back button if this is a subcatalogue
+					if(index == 0 && widget.model.isSubCatalogue) {
+						return tileWidgit(
+							//color: Colors.grey.withOpacity(0.50),
+							children: [
+								FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.circle, color: Colors.grey.withOpacity(0.50))),
+								const FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.arrow_back)),
+								Material(color: Colors.transparent,
+									child: InkWell(
+										onTap: () => Navigator.pop(context),
+										onLongPress: () => Navigator.pop(context),
+									),
+								),
+							]
+						);
+					}
+					// Adding any subcatalogues
+					if(getIndex(index) < 0) {
+						return tileWidgit(
+							children: [
+								FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.folder, color: Colors.grey.withOpacity(0.50))),
+								FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name)),
+								Material(color: Colors.transparent,
+									child: InkWell(
+										onTap: () => {
+											Navigator.push(
+												context,
+												MaterialPageRoute(builder: (context) => 
+													AppScreen(
+														body: Padding(padding: const EdgeInsets.all(8.0),
+															child: WordCatalogue(
+																model: widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)],
+																onChoice: null,
+															)
+														),
+														title: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name),
+													)
+												),
+											).then((value) => setState(() {},))
+										},
+										onLongPress: () => Navigator.pop(context),
+									),
+								),
+							]
+						);
+					}
+					// Adding all the words
+					return tileWidgit(
+						children: [
+							wordWidgit(widget.model.wordLst[getIndex(index)]),
+							Material(color: Colors.transparent,
+								child: InkWell(
+									onTap: () => _toggle(widget.model.wordLst[getIndex(index)]),
+									onLongPress: () => _toggle(widget.model.wordLst[getIndex(index)]),
+									//onLongPress: () => _wordSelected(context, index),
+								),
+							),
+						]
 					);
 				}
 			);
 		});
+	}
+
+	int getIndex(int index) {
+		return index - widget.model.subCatalogues.length - (widget.model.isSubCatalogue ? 1 : 0);
+	}
+
+	Widget tileWidgit({List<Widget> children = const <Widget>[], Color? color}) {
+		return GridTile(
+			child: Center(
+				child: Container(
+					margin: const EdgeInsets.only(left:5, top:5, right:5, bottom:5),
+					color: color,
+					child: Stack(
+						fit: StackFit.expand,
+						children: children,
+					),
+				)
+			)
+		);
 	}
 
 	void addNewWord(String word) {
@@ -164,11 +224,14 @@ class WordCatalogueState extends State<WordCatalogue> {
 }
 
 class WordCatalogueModel {
+	final String name;
 	final List<WordModel> wordLst;
+	final List<WordCatalogueModel> subCatalogues;
+	final bool isSubCatalogue;
 
 	String _appDocPath = "";
 
-	WordCatalogueModel({required this.wordLst, required Function() callback}) {
+	WordCatalogueModel({required this.name, required this.wordLst, required this.subCatalogues, required Function() callback, this.isSubCatalogue = false}) {
 		_setAppDocPath(callback);
 	}
 
@@ -180,23 +243,25 @@ class WordCatalogueModel {
 	}
 
 	Future<void> _loadJson(Function() callback) async {
-		File f = File("$_appDocPath/words.json");
-		f.exists().then((exists) {
-			if(exists) {
-				Map<String, dynamic> json = jsonDecode(f.readAsStringSync());
-				List<dynamic> jsonWords = json["words"];
-				for(var element in jsonWords) {
-					WordModel word = WordModel.fromJson(element);
-					if(!wordLst.contains(word)) {
-						wordLst.add(word);
+		if(!isSubCatalogue) {
+			File f = File("$_appDocPath/words.json");
+			f.exists().then((exists) {
+				if(exists) {
+					Map<String, dynamic> json = jsonDecode(f.readAsStringSync());
+					List<dynamic> jsonWords = json["words"];
+					for(var element in jsonWords) {
+						WordModel word = WordModel.fromJson(element);
+						if(!wordLst.contains(word)) {
+							wordLst.add(word);
+						}
 					}
+					callback.call();
+					Util.log("Words Found: ${f.path}${Platform.pathSeparator}words.json");
+				} else {
+					Util.log("Words Not Found: ${f.path}");
 				}
-				callback.call();
-				Util.log("Words Found: ${f.path}${Platform.pathSeparator}words.json");
-			} else {
-				Util.log("Words Not Found: ${f.path}");
-			}
-		});
+			});
+		}
 	}
 
 	void _saveJson() async {
