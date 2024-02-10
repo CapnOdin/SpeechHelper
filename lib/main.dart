@@ -117,6 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
 				WordCatalogueModel(
 					name: "Behov",
 					wordLst: [	WordModel(word: "Hjælp"),
+								WordModel(word: "Gør Ondt"),
 								WordModel(word: "Sulten"),
 								WordModel(word: "Tørstig"),
 								WordModel(word: "På Toilettet"),
@@ -125,6 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
 								WordModel(word: "Træt"),
 								WordModel(word: "TV"),
 								WordModel(word: "Fred"),
+								WordModel(word: "Selvskab"),
 					],
 					subCatalogues: [],
 					callback: () => setState(() {}),
@@ -162,6 +164,10 @@ class _MyHomePageState extends State<MyHomePage> {
 								WordModel(word: "Jer"),
 								WordModel(word: "I"),
 								WordModel(word: "Mig"),
+								WordModel(word: "Anne"),
+								WordModel(word: "Augusta"),
+								WordModel(word: "Albert"),
+								WordModel(word: "Anton"),
 					],
 					subCatalogues: [],
 					callback: () => setState(() {}),
@@ -179,7 +185,60 @@ class _MyHomePageState extends State<MyHomePage> {
 					callback: () => setState(() {}),
 					isSubCatalogue: true
 				),
-
+				WordCatalogueModel(
+					name: "Følelser",
+					wordLst: [	WordModel(word: "Glad"),
+								WordModel(word: "Trist"),
+								WordModel(word: "Ked af det"),
+								WordModel(word: "Sur"),
+								WordModel(word: "Forvirret"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Krop",
+					wordLst: [	WordModel(word: "Hovet"),
+								WordModel(word: "Skulder"),
+								WordModel(word: "Arm"),
+								WordModel(word: "Brystkasse"),
+								WordModel(word: "Mave"),
+								WordModel(word: "Skridt"),
+								WordModel(word: "Numse"),
+								WordModel(word: "Lår"),
+								WordModel(word: "Ben"),
+								WordModel(word: "Fod"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Bindeord",
+					wordLst: [	WordModel(word: "At"),
+								WordModel(word: "Og"),
+								WordModel(word: "Dengang"),
+								WordModel(word: "Medmindre"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
+				WordCatalogueModel(
+					name: "Forholdsord",
+					wordLst: [	WordModel(word: "Højre"),
+								WordModel(word: "Venstre"),
+								WordModel(word: "Af"),
+								WordModel(word: "Ifølge"),
+								WordModel(word: "Over"),
+								WordModel(word: "Mellem"),
+								WordModel(word: "Under"),
+					],
+					subCatalogues: [],
+					callback: () => setState(() {}),
+					isSubCatalogue: true
+				),
 			],
 			callback: () => setState(() {})
 		);
