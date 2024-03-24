@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:speech_helper/app_screen.dart';
 import 'package:speech_helper/util.dart';
 
@@ -96,8 +97,10 @@ class WordCatalogueState extends State<WordCatalogue> {
 								context,
 								MaterialPageRoute(builder: (context) => 
 									AppScreen(
+										floatingActionButton: quickMenu(context, model),
 										body: Padding(padding: const EdgeInsets.all(8.0),
 											child: WordCatalogue(
+												key: model.key,
 												model: model,
 												onChoice: null,
 											)
@@ -148,6 +151,67 @@ class WordCatalogueState extends State<WordCatalogue> {
 		);
 	}
 
+	Future<void> addWordDialog(BuildContext context, WordCatalogueModel model) {
+		GlobalKey<EditableTextState> wordKey = GlobalKey(debugLabel: "wordKey");
+		final myController = TextEditingController();
+		return showDialog<void>(
+			context: context,
+			builder: (BuildContext context) {
+				return AlertDialog(
+					title: const Text('Add a Word'),
+					content: TextField(key: wordKey, controller: myController, autofocus: true),
+					actions: <Widget>[
+						TextButton(
+							style: TextButton.styleFrom(
+								textStyle: Theme.of(context).textTheme.labelLarge,
+							),
+							child: const Text('Cancel', textAlign: TextAlign.end),
+							onPressed: () {
+								Navigator.of(context).pop();
+							},
+						),
+						TextButton(
+							style: TextButton.styleFrom(
+								textStyle: Theme.of(context).textTheme.labelLarge,
+							),
+							child: const Text('Add', textAlign: TextAlign.end),
+							onPressed: () {
+								Navigator.of(context).pop();
+								Util.logD("Adding Word to ${model.isSubCatalogue ? 'subcatalogue' : "catalogue"} ${model.name}");
+								model.key.currentState?.addNewWord(myController.text);
+							},
+						),
+					],
+				);
+			},
+		);
+	}
+
+	Widget quickMenu(BuildContext context, WordCatalogueModel model) {
+		return SpeedDial(
+			icon: Icons.more_horiz,
+			closeManually: true,
+			renderOverlay: false,
+			children: [
+				SpeedDialChild(
+					child: const Icon(Icons.add),
+					label: "Add Word",
+					onTap: () => model.key.currentState?.addWordDialog(context, model),
+				),
+				SpeedDialChild(
+					child: const Icon(Icons.do_not_disturb),
+					label: "Nej",
+					onTap: () => model.key.currentState?.tts("Nej"),
+				),
+				SpeedDialChild(
+					child: const Icon(Icons.check),
+					label: "Ja",
+					onTap: () => model.key.currentState?.tts("Ja"),
+				),
+			],
+		);
+	}
+
 	void addNewWord(String word) {
 		setState(() {
 			widget.model.addWord(word);
@@ -164,11 +228,11 @@ class WordCatalogueState extends State<WordCatalogue> {
 		if(widget.onChoice != null) {
 			widget.onChoice!.call(model.word);
 		} else {
-			_tts(model.pronunciation ?? model.word);
+			tts(model.pronunciation ?? model.word);
 		}
 	}
 
-	Future<void> _tts(String word) async {
+	Future<void> tts(String word) async {
 		await flutterTts.speak(word);
 	}
 
@@ -240,9 +304,12 @@ class WordCatalogueModel {
 	final List<WordCatalogueModel> subCatalogues;
 	final bool isSubCatalogue;
 
+	late GlobalKey<WordCatalogueState> key;
+
 	String _appDocPath = "";
 
 	WordCatalogueModel({required this.name, required this.wordLst, required this.subCatalogues, required Function() callback, this.isSubCatalogue = false}) {
+		key = GlobalKey(debugLabel: "${name}Key");
 		_setAppDocPath(callback);
 	}
 
@@ -254,30 +321,28 @@ class WordCatalogueModel {
 	}
 
 	Future<void> _loadJson(Function() callback) async {
-		if(!isSubCatalogue) {
-			File f = File("$_appDocPath/words.json");
-			f.exists().then((exists) {
-				if(exists) {
-					Map<String, dynamic> json = jsonDecode(f.readAsStringSync());
-					List<dynamic> jsonWords = json["words"];
-					for(var element in jsonWords) {
-						WordModel word = WordModel.fromJson(element);
-						if(!wordLst.contains(word)) {
-							wordLst.add(word);
-						}
+		File f = File("$_appDocPath/${name}_words.json");
+		f.exists().then((exists) {
+			if(exists) {
+				Map<String, dynamic> json = jsonDecode(f.readAsStringSync());
+				List<dynamic> jsonWords = json["words"];
+				for(var element in jsonWords) {
+					WordModel word = WordModel.fromJson(element);
+					if(!wordLst.contains(word)) {
+						wordLst.add(word);
 					}
-					callback.call();
-					Util.log("Words Found: ${f.path}${Platform.pathSeparator}words.json");
-				} else {
-					Util.log("Words Not Found: ${f.path}");
 				}
-			});
-		}
+				callback.call();
+				Util.log("Words Found: ${f.path}");
+			} else {
+				Util.log("Words Not Found: ${f.path}");
+			}
+		});
 	}
 
 	void _saveJson() async {
-		Util.logD(Util.handleWinPath("$_appDocPath/words.json"));
-		File(Util.handleWinPath("$_appDocPath/words.json")).openWrite().write(toJson());
+		Util.logD(Util.handleWinPath("$_appDocPath/${name}_words.json"));
+		File(Util.handleWinPath("$_appDocPath/${name}_words.json")).openWrite().write(toJson());
 	}
 
 	Map<String, dynamic> toJson() => {

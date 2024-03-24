@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:speech_helper/app_screen.dart';
 import 'package:speech_helper/word_catalogue_view.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 void main() {
 	runApp(const MyApp());
@@ -58,7 +59,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-	GlobalKey<WordCatalogueState> wordCatalogueKey = GlobalKey(debugLabel: "wordCatalogueKey");
+	late GlobalKey<WordCatalogueState> wordCatalogueKey;
 	WordCatalogueModel? wordCatalogueModel;
 
 	Future<void> _buttonClicked(BuildContext context) {
@@ -93,6 +94,31 @@ class _MyHomePageState extends State<MyHomePage> {
 					],
 				);
 			},
+		);
+	}
+
+	Widget quickMenu(BuildContext context) {
+		return SpeedDial(
+			icon: Icons.more_horiz,
+			closeManually: true,
+			renderOverlay: false,
+			children: [
+				SpeedDialChild(
+					child: const Icon(Icons.add),
+					label: "Add Word",
+					onTap: () => _buttonClicked(context),
+				),
+				SpeedDialChild(
+					child: const Icon(Icons.do_not_disturb),
+					label: "Nej",
+					onTap: () => wordCatalogueKey.currentState!.tts("Nej"),
+				),
+				SpeedDialChild(
+					child: const Icon(Icons.check),
+					label: "Ja",
+					onTap: () => wordCatalogueKey.currentState!.tts("Ja"),
+				),
+			],
 		);
 	}
 
@@ -243,12 +269,9 @@ class _MyHomePageState extends State<MyHomePage> {
 			],
 			callback: () => setState(() {})
 		);
+		wordCatalogueKey = wordCatalogueModel!.key;
 		return AppScreen(title: const Text("Catalogue"),
-			floatingActionButton: FloatingActionButton(
-				onPressed: () => _buttonClicked(context),
-				tooltip: "Add Word",
-				child: const Icon(Icons.add),
-			),
+			floatingActionButton: quickMenu(context),
 			body: Padding(padding: const EdgeInsets.all(8.0),
 				child: WordCatalogue(
 					key: wordCatalogueKey,
