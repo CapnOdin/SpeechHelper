@@ -85,6 +85,25 @@ class WordCatalogueState extends State<WordCatalogue> {
 		);
 	}
 
+	void showSubCatalogue(WordCatalogueModel model) {
+		Navigator.push(
+			context,
+			MaterialPageRoute(builder: (context) => 
+				AppScreen(
+					floatingActionButton: quickMenu(context, model),
+					body: Padding(padding: const EdgeInsets.all(8.0),
+						child: WordCatalogue(
+							key: model.key,
+							model: model,
+							onChoice: null,
+						)
+					),
+					title: Text(model.name),
+				)
+			),
+		).then((value) => setState(() {},));
+	}
+
 	Widget subCatalogueWidget(WordCatalogueModel model) {
 		return tileWidget(
 			children: [
@@ -92,25 +111,8 @@ class WordCatalogueState extends State<WordCatalogue> {
 				FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(model.name)),
 				Material(color: Colors.transparent,
 					child: InkWell(
-						onTap: () => {
-							Navigator.push(
-								context,
-								MaterialPageRoute(builder: (context) => 
-									AppScreen(
-										floatingActionButton: quickMenu(context, model),
-										body: Padding(padding: const EdgeInsets.all(8.0),
-											child: WordCatalogue(
-												key: model.key,
-												model: model,
-												onChoice: null,
-											)
-										),
-										title: Text(model.name),
-									)
-								),
-							).then((value) => setState(() {},))
-						},
-						onLongPress: () => Navigator.pop(context),
+						onTap: () => showSubCatalogue(model),
+						onLongPress: () => showSubCatalogue(model),
 					),
 				),
 			]
