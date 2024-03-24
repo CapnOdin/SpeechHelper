@@ -41,7 +41,7 @@ class WordCatalogueState extends State<WordCatalogue> {
 	}
 
 	Widget _catalogue() {
-		Util.logD("_catalogue");
+		Util.logD("Opening ${widget.model.isSubCatalogue ? 'subcatalogue' : "catalogue"} ${widget.model.name}");
 		return LayoutBuilder(builder: (context, constraints) {
 			return ScrollShadow(
 				color: Colors.grey,
@@ -51,63 +51,14 @@ class WordCatalogueState extends State<WordCatalogue> {
 					itemBuilder: (_, int index) {
 						// Adding the back button if this is a subcatalogue
 						if(index == 0 && widget.model.isSubCatalogue) {
-							return tileWidgit(
-								//color: Colors.grey.withOpacity(0.50),
-								children: [
-									FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.circle, color: Colors.grey.withOpacity(0.50))),
-									const FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.arrow_back)),
-									Material(color: Colors.transparent,
-										child: InkWell(
-											onTap: () => Navigator.pop(context),
-											onLongPress: () => Navigator.pop(context),
-										),
-									),
-								]
-							);
+							return backButtonWidget();
 						}
 						// Adding any subcatalogues
 						if(getIndex(index) < 0) {
-							return tileWidgit(
-								children: [
-									FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.folder, color: Colors.grey.withOpacity(0.50))),
-									FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name)),
-									Material(color: Colors.transparent,
-										child: InkWell(
-											onTap: () => {
-												Navigator.push(
-													context,
-													MaterialPageRoute(builder: (context) => 
-														AppScreen(
-															body: Padding(padding: const EdgeInsets.all(8.0),
-																child: WordCatalogue(
-																	model: widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)],
-																	onChoice: null,
-																)
-															),
-															title: Text(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)].name),
-														)
-													),
-												).then((value) => setState(() {},))
-											},
-											onLongPress: () => Navigator.pop(context),
-										),
-									),
-								]
-							);
+							return subCatalogueWidget(widget.model.subCatalogues[index - (widget.model.isSubCatalogue ? 1 : 0)]);
 						}
 						// Adding all the words
-						return tileWidgit(
-							children: [
-								wordWidgit(widget.model.wordLst[getIndex(index)]),
-								Material(color: Colors.transparent,
-									child: InkWell(
-										onTap: () => _toggle(widget.model.wordLst[getIndex(index)]),
-										onLongPress: () => _toggle(widget.model.wordLst[getIndex(index)]),
-										//onLongPress: () => _wordSelected(context, index),
-									),
-								),
-							]
-						);
+						return wordWidget(widget.model.wordLst[getIndex(index)]);
 					}
 				)
 			);
@@ -118,7 +69,71 @@ class WordCatalogueState extends State<WordCatalogue> {
 		return index - widget.model.subCatalogues.length - (widget.model.isSubCatalogue ? 1 : 0);
 	}
 
-	Widget tileWidgit({List<Widget> children = const <Widget>[], Color? color}) {
+	Widget backButtonWidget() {
+		return tileWidget(
+			children: [
+				FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.circle, color: Colors.grey.withOpacity(0.50))),
+				const FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.arrow_back)),
+				Material(color: Colors.transparent,
+					child: InkWell(
+						onTap: () => Navigator.pop(context),
+						onLongPress: () => Navigator.pop(context),
+					),
+				),
+			]
+		);
+	}
+
+	Widget subCatalogueWidget(WordCatalogueModel model) {
+		return tileWidget(
+			children: [
+				FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(Icons.folder, color: Colors.grey.withOpacity(0.50))),
+				FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(model.name)),
+				Material(color: Colors.transparent,
+					child: InkWell(
+						onTap: () => {
+							Navigator.push(
+								context,
+								MaterialPageRoute(builder: (context) => 
+									AppScreen(
+										body: Padding(padding: const EdgeInsets.all(8.0),
+											child: WordCatalogue(
+												model: model,
+												onChoice: null,
+											)
+										),
+										title: Text(model.name),
+									)
+								),
+							).then((value) => setState(() {},))
+						},
+						onLongPress: () => Navigator.pop(context),
+					),
+				),
+			]
+		);
+	}
+
+	Widget wordWidget(WordModel model) {
+		return tileWidget(
+			children: [
+				if(model.icon != null) ...[
+					FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(model.icon)),
+				 ] else ...[
+					FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(model.word)),
+				],
+				Material(color: Colors.transparent,
+					child: InkWell(
+						onTap: () => _toggle(model),
+						onLongPress: () => _toggle(model),
+						//onLongPress: () => _wordSelected(context, index),
+					),
+				),
+			]
+		);
+	}
+
+	Widget tileWidget({List<Widget> children = const <Widget>[], Color? color}) {
 		return GridTile(
 			child: Center(
 				child: Container(
@@ -155,14 +170,6 @@ class WordCatalogueState extends State<WordCatalogue> {
 
 	Future<void> _tts(String word) async {
 		await flutterTts.speak(word);
-	}
-
-	Widget wordWidgit(WordModel model) {
-		if(model.icon != null) {
-			return FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Icon(model.icon));
-		} else {
-			return FittedBox(fit: BoxFit.contain, clipBehavior: Clip.hardEdge, child: Text(model.word));
-		}
 	}
 
 	Future<void> initTTS() async {
